@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StopsProvider } from '@/context/StopsContext';
 import { NetworkMockProvider } from '@/context/network-mock';
 
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (

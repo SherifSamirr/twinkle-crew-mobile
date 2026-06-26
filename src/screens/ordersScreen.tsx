@@ -16,13 +16,10 @@ const SLOT_META: Record<SlotId, { title: string; window: string }> = {
 
 type Section = { slotId: SlotId; title: string; window: string; data: Stop[] };
 
-const TERMINAL = new Set(['completed', 'failed']);
-
 function sortStops(stops: Stop[]): Stop[] {
   return [...stops].sort((a, b) => {
-    const aTerminal = TERMINAL.has(a.status);
-    const bTerminal = TERMINAL.has(b.status);
-    if (aTerminal !== bTerminal) return aTerminal ? 1 : -1;
+    const byId = a.id.localeCompare(b.id);
+    if (byId !== 0) return byId;
     return a.must_finish_by.localeCompare(b.must_finish_by);
   });
 }

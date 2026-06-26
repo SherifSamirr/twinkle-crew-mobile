@@ -45,9 +45,9 @@
         "Name sign: 'Yara 5'"
       ],
       "must_finish_by": "15:30",
-      "status": "en_route",
+      "status": "completed",
       "notes": null,
-      "proof_photo_url": null
+      "proof_photo_url": "file:///Users/sherif/Library/Developer/CoreSimulator/Devices/D3622B85-48E3-40DD-A213-99888D403D35/data/Containers/Data/Application/A71C68FB-0C65-4B41-9FF9-EFD4A042033C/Library/Caches/ImagePicker/21567C32-B262-468E-A768-44EA3A02A6AC.jpg"
     },
     {
       "id": "ORD-3002",
@@ -62,9 +62,9 @@
         "Gold balloon set"
       ],
       "must_finish_by": "15:30",
-      "status": "loaded",
-      "notes": null,
-      "proof_photo_url": null
+      "status": "completed",
+      "notes": "just finished the setup",
+      "proof_photo_url": "file:///Users/sherif/Library/Developer/CoreSimulator/Devices/D3622B85-48E3-40DD-A213-99888D403D35/data/Containers/Data/Application/A71C68FB-0C65-4B41-9FF9-EFD4A042033C/Library/Caches/ImagePicker/84F0C364-81D8-473D-8FC8-A6134319C0DC.jpg"
     },
     {
       "id": "ORD-3003",
@@ -79,9 +79,10 @@
         "Welcome table"
       ],
       "must_finish_by": "15:30",
-      "status": "loaded",
+      "status": "failed",
       "notes": null,
-      "proof_photo_url": null
+      "proof_photo_url": null,
+      "failed_reason": "Request declined"
     },
     {
       "id": "ORD-3004",

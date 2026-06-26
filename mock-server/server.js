@@ -101,6 +101,9 @@ const middlewares = jsonServer.defaults();
 server.use(middlewares);
 server.use(jsonServer.bodyParser);
 
+// Simulate realistic network latency (600 ms) so offline behaviour is visible during demos
+server.use((_req, _res, next) => setTimeout(next, 600));
+
 server.post('/reset', (_req, res) => {
   fs.writeFileSync(DB_PATH, JSON.stringify(SEED, null, 2));
   router.db.read();
