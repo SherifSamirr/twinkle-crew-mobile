@@ -51,12 +51,12 @@ npm test
 
 `mock-server/db.json` acts as the mutable backend. `json-server` exposes it as a REST API:
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/stops` | `GET` | Fetch all stops for the day |
-| `/stops/:id` | `GET` | Fetch a single stop |
-| `/stops/:id` | `PATCH` | Update status, reason, photo URL, notes |
-| `/reset` | `POST` | Restore all stops to the initial seed state (dev only) |
+| Endpoint     | Method  | Purpose                                                |
+| ------------ | ------- | ------------------------------------------------------ |
+| `/stops`     | `GET`   | Fetch all stops for the day                            |
+| `/stops/:id` | `GET`   | Fetch a single stop                                    |
+| `/stops/:id` | `PATCH` | Update status, reason, photo URL, notes                |
+| `/reset`     | `POST`  | Restore all stops to the initial seed state (dev only) |
 
 Changes made through the app (status transitions, proof photos) are `PATCH`-ed to this server and written through to `db.json`, so they survive a server restart.
 
@@ -179,7 +179,7 @@ Pure data assertions — no mocking required.
 Uses a stateful in-memory mock for `getDb()` that mirrors the SQL semantics without a native SQLite module.
 
 - `enqueue` creates a row with `sync_state = 'pending'` and `retry_count = 0`
-- `getPending` returns only pending rows, in FIFO (created\_at ascending) order
+- `getPending` returns only pending rows, in FIFO (created_at ascending) order
 - `getPendingStopIds` deduplicates stop IDs correctly
 - `markFailed` state machine — stays `pending` after 1st and 2nd failure, flips to `failed` on the 3rd (the critical boundary: a direct SQL-string assertion verifies the query contains `retry_count + 1 >= 3` so an off-by-one change fails immediately)
 - `remove` deletes only the targeted entry, leaves others intact
@@ -215,15 +215,14 @@ Mocks all DAOs and services. Uses `renderHook` from `@testing-library/react-nati
 
 ### Lateness awareness
 
-The requirements call for a calm warning when a stop is at risk of running late (still `en_route` with little margin before `must_finish_by`). This was deliberately kept out of scope to avoid false alarms while the UX is still being validated.
+The requirements call for a calm warning when a stop is at risk of running late (still `en_route` with little margin before `must_finish_by`).
 
 **How this would work technically:**
+
 - A `useLateness(stop)` hook calculates `minutesLeft = must_finish_by - now()` on a 30-second interval using `setInterval`
 - When `minutesLeft < threshold` (e.g., < 20 min) and `status === 'en_route'`, it returns a `{ isAtRisk: true, minutesLeft }` flag
-- The stop card and detail screen surface a quiet amber banner: *"15 min to must-finish — consider calling ahead"*
+- The stop card and detail screen surface a quiet amber banner: _"15 min to must-finish — consider calling ahead"_
 - No sound, no vibration — a visual-only signal that the crew can choose to act on
-
-The threshold would be configurable per slot and potentially per area (a villa compound takes longer to access than an apartment block).
 
 ### Distance to stop
 
@@ -238,7 +237,3 @@ An end-of-day screen would close the loop: how many stops delivered on time, whi
 **Technical sketch:**
 
 On the client, a `useDaySummary()` hook aggregates the local SQLite state — `SELECT status, COUNT(*) FROM stops GROUP BY status` — and the `outbox` table for any still-pending rows. This gives the crew an immediate local picture without a network call.
-
-**Toward a live back-office dashboard:**
-
-The json-server `events` table (already in the seed) is the hook for this. Every status change the app PATCHes could also `POST /events` with a payload of `{ stop_id, from_status, to_status, timestamp, crew_id }`. A lightweight websocket relay (e.g., Ably or a simple `EventSource` endpoint) would let a browser dashboard subscribe to those events and show the fleet's position in real time — each stop dot on a map changing colour as the crew advances through the day. `must_finish_by` + current status + last-event timestamp gives a naive ETA that could be surfaced to the back-office team without requiring GPS.
