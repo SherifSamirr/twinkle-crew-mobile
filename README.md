@@ -2,7 +2,7 @@
 
 A mobile app for the Twinkle delivery crew to run their day: load stops, advance status through the lifecycle, capture proof-of-setup photos, and keep working even when the signal drops.
 
-[Watch the demo](demo/Twinkle-crew-demo-1080.mov)
+[Watch the demo](https://www.loom.com/share/caa2569f5ac14a37b043357768f3a33c)
 
 ---
 
