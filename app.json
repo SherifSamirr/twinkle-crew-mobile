@@ -25,6 +25,14 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-maps",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Twinkle needs access to your photos to attach proof of delivery.",
+          "cameraPermission": "Twinkle needs camera access to photograph the completed setup."
+        }
+      ],
       [
         "expo-splash-screen",
         {
