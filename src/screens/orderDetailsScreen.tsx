@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
 	ActivityIndicator,
 	Image,
@@ -17,21 +17,31 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { NEXT_COLOR, NEXT_LABEL, NEXT_STATUS } from '@/constants/status';
 import { Spacing } from '@/constants/theme';
+import { useStopDetail } from '@/hooks/useStopDetail';
 import { useTheme } from '@/hooks/use-theme';
 import { CompletionModal } from '@/modals/CompletionModal';
 import { FailedReasonModal } from '@/modals/FailedReasonModal';
-import { fetchStopById, updateStopStatus } from '@/services/stopsService';
-import type { Stop, StopStatus } from '@/types';
 
 
 
-function InfoSection({ title, children }: { title: string; children: ReactNode }) {
+const PENDING_COLOR = '#F59E0B';
+
+function InfoSection({ title, children, pending }: { title: string; children: ReactNode; pending?: boolean }) {
 	const theme = useTheme();
 	return (
-		<View style={[styles.section, { backgroundColor: theme.backgroundElement }]}>
-			<ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-				{title}
-			</ThemedText>
+		<View style={[
+			styles.section,
+			{ backgroundColor: theme.backgroundElement },
+			pending && styles.sectionPending,
+		]}>
+			<View style={styles.sectionTitleRow}>
+				<ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+					{title}
+				</ThemedText>
+				{pending && (
+					<ThemedText type="small" style={styles.pendingTag}>Pending sync</ThemedText>
+				)}
+			</View>
 			{children}
 		</View>
 	);
@@ -52,68 +62,35 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function OrderDetailsScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
-	const [stop, setStop] = useState<Stop | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const { stop, hasPendingSync, loading, error, enqueueUpdate } = useStopDetail(id);
 	const [updating, setUpdating] = useState(false);
 	const [showFailedModal, setShowFailedModal] = useState(false);
 	const [showCompleteModal, setShowCompleteModal] = useState(false);
 	const theme = useTheme();
 
-	useEffect(() => {
-		if (!id) return;
-		fetchStopById(id)
-			.then(setStop)
-			.catch((err: unknown) =>
-				setError(err instanceof Error ? err.message : 'Failed to load order'),
-			)
-			.finally(() => setLoading(false));
-	}, [id]);
-
 	const advance = async () => {
 		if (!stop || updating) return;
 		const next = NEXT_STATUS[stop.status];
 		if (!next) return;
-		setStop({ ...stop, status: next });
 		setUpdating(true);
-		try {
-			const updated = await updateStopStatus(stop.id, next);
-			setStop(updated);
-		} catch {
-			// keep optimistic state; will sync later
-		} finally {
-			setUpdating(false);
-		}
+		await enqueueUpdate(stop.id, next);
+		setUpdating(false);
 	};
 
 	const confirmFailed = async (reason: string) => {
 		if (!stop) return;
 		setShowFailedModal(false);
-		setStop({ ...stop, status: 'failed' });
 		setUpdating(true);
-		try {
-			const updated = await updateStopStatus(stop.id, 'failed', reason);
-			setStop(updated);
-		} catch {
-			// keep optimistic state
-		} finally {
-			setUpdating(false);
-		}
+		await enqueueUpdate(stop.id, 'failed', reason);
+		setUpdating(false);
 	};
 
 	const confirmComplete = async (photoUri: string, note: string | null) => {
 		if (!stop) return;
 		setShowCompleteModal(false);
-		setStop({ ...stop, status: 'completed', proof_photo_url: photoUri, notes: note ?? stop.notes });
 		setUpdating(true);
-		try {
-			const updated = await updateStopStatus(stop.id, 'completed', undefined, photoUri, note);
-			setStop(updated);
-		} catch {
-			// keep optimistic state; will sync later
-		} finally {
-			setUpdating(false);
-		}
+		await enqueueUpdate(stop.id, 'completed', undefined, photoUri, note);
+		setUpdating(false);
 	};
 
 	const openInMaps = () => {
@@ -156,7 +133,14 @@ export default function OrderDetailsScreen() {
 				<Pressable onPress={() => router.back()} hitSlop={8}>
 					<ThemedText type="default">← Orders</ThemedText>
 				</Pressable>
-				<StatusBadge status={stop.status} />
+				<View style={styles.navRight}>
+					<StatusBadge status={stop.status} />
+					{hasPendingSync && (
+						<ThemedText type="small" style={styles.pendingLabel}>
+							Pending
+						</ThemedText>
+					)}
+				</View>
 			</View>
 
 			<ScrollView
@@ -211,7 +195,7 @@ export default function OrderDetailsScreen() {
 				) : null}
 
 				{stop.proof_photo_url ? (
-					<InfoSection title="PROOF OF SETUP">
+					<InfoSection title="PROOF OF SETUP" pending={hasPendingSync}>
 						<Image
 							source={{ uri: stop.proof_photo_url }}
 							style={styles.proofImage}
@@ -222,6 +206,14 @@ export default function OrderDetailsScreen() {
 								{stop.notes}
 							</ThemedText>
 						) : null}
+					</InfoSection>
+				) : null}
+
+				{stop.status === 'failed' && stop.failed_reason ? (
+					<InfoSection title="FAILED REASON" pending={hasPendingSync}>
+						<ThemedText type="small" style={styles.failedReason}>
+							{stop.failed_reason}
+						</ThemedText>
 					</InfoSection>
 				) : null}
 			</ScrollView>
@@ -299,6 +291,15 @@ const styles = StyleSheet.create({
 		paddingVertical: Spacing.two,
 		borderBottomWidth: StyleSheet.hairlineWidth,
 	},
+	navRight: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: Spacing.two,
+	},
+	pendingLabel: {
+		color: '#F59E0B',
+		fontSize: 12,
+	},
 	content: {
 		padding: Spacing.three,
 		paddingBottom: 120,
@@ -317,9 +318,22 @@ const styles = StyleSheet.create({
 		padding: Spacing.three,
 		marginBottom: Spacing.two,
 	},
-	sectionTitle: {
+	sectionPending: {
+		borderWidth: 1,
+		borderColor: PENDING_COLOR,
+	},
+	sectionTitleRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
 		marginBottom: Spacing.two,
+	},
+	sectionTitle: {
 		letterSpacing: 0.8,
+	},
+	pendingTag: {
+		color: PENDING_COLOR,
+		fontSize: 11,
 	},
 	infoRow: {
 		flexDirection: 'row',
@@ -356,6 +370,9 @@ const styles = StyleSheet.create({
 	},
 	proofNote: {
 		marginTop: Spacing.two,
+	},
+	failedReason: {
+		color: '#EF4444',
 	},
 	badge: {
 		paddingHorizontal: Spacing.two,

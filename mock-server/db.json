@@ -45,10 +45,9 @@
         "Name sign: 'Yara 5'"
       ],
       "must_finish_by": "15:30",
-      "status": "failed",
+      "status": "en_route",
       "notes": null,
-      "proof_photo_url": null,
-      "failed_reason": "Client suspended his request"
+      "proof_photo_url": null
     },
     {
       "id": "ORD-3002",
@@ -63,9 +62,9 @@
         "Gold balloon set"
       ],
       "must_finish_by": "15:30",
-      "status": "completed",
+      "status": "loaded",
       "notes": null,
-      "proof_photo_url": "file:///Users/sherif/Library/Developer/CoreSimulator/Devices/D3622B85-48E3-40DD-A213-99888D403D35/data/Containers/Data/Application/A71C68FB-0C65-4B41-9FF9-EFD4A042033C/Library/Caches/ImagePicker/99BD88D9-F7F0-45F0-99DA-350477183FA3.jpg"
+      "proof_photo_url": null
     },
     {
       "id": "ORD-3003",
@@ -80,9 +79,9 @@
         "Welcome table"
       ],
       "must_finish_by": "15:30",
-      "status": "completed",
-      "notes": "Customer is satisfied",
-      "proof_photo_url": "file:///Users/sherif/Library/Developer/CoreSimulator/Devices/D3622B85-48E3-40DD-A213-99888D403D35/data/Containers/Data/Application/A71C68FB-0C65-4B41-9FF9-EFD4A042033C/Library/Caches/ImagePicker/12110FF2-CF1F-4B23-A57F-3CA72CBFEA63.jpg"
+      "status": "loaded",
+      "notes": null,
+      "proof_photo_url": null
     },
     {
       "id": "ORD-3004",
@@ -97,7 +96,7 @@
         "Floor cushions arch"
       ],
       "must_finish_by": "19:30",
-      "status": "en_route",
+      "status": "loaded",
       "notes": null,
       "proof_photo_url": null
     },

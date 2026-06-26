@@ -2,7 +2,7 @@ import type { StopStatus } from './stop';
 
 export type EventType = 'status_change' | 'proof_upload';
 
-export type SyncState = 'pending' | 'synced' | 'failed';
+export type SyncState = 'pending' | 'failed';
 
 export interface StatusChangePayload {
   status: StopStatus;

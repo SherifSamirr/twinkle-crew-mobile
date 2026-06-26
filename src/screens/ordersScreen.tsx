@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, View } from 'react-native';
 
+import { StopCard } from '@/components/stopCard';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { StopCard } from '@/components/stopCard';
 import { Spacing } from '@/constants/theme';
-import { fetchStops } from '@/services/stopsService';
+import { useNetworkMock } from '@/context/network-mock';
+import { useStops } from '@/hooks/useStops';
 import type { SlotId, Stop } from '@/types';
 
 const SLOT_META: Record<SlotId, { title: string; window: string }> = {
@@ -38,18 +39,8 @@ function SlotHeader({ title, window: timeWindow }: { title: string; window: stri
 }
 
 export default function OrdersScreen() {
-  const [stops, setStops] = useState<Stop[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchStops()
-      .then(setStops)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed to load stops'),
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const { stops, pendingStopIds, loading, error } = useStops();
+  const { isConnected } = useNetworkMock();
 
   const sections = useMemo<Section[]>(
     () =>
@@ -81,12 +72,26 @@ export default function OrdersScreen() {
     );
   }
 
+  if (sections.length === 0 && !isConnected) {
+    return (
+      <ThemedView style={styles.centered}>
+        <ThemedText type="smallBold">No internet connection</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Connect to load today's stops.
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.screen}>
       <SectionList
         sections={sections}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <StopCard stop={item} />}
+        ListHeaderComponent={<ThemedText style={styles.heading}>My Orders</ThemedText>}
+        renderItem={({ item }) => (
+          <StopCard stop={item} hasPendingSync={pendingStopIds.has(item.id)} />
+        )}
         renderSectionHeader={({ section }) => (
           <SlotHeader title={section.title} window={section.window} />
         )}
@@ -106,6 +111,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+	heading: {
+		fontSize: 24,
+		fontWeight: '700',
+		marginBottom: Spacing.two,
+		marginTop: Spacing.four,
+	},
   list: {
     padding: Spacing.three,
   },

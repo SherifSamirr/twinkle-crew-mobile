@@ -5,11 +5,15 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { API_BASE_URL } from '@/constants/api';
+import { useStopsContext } from '@/context/StopsContext';
 import { useNetworkMock } from '@/context/network-mock';
+import * as outboxDao from '@/db/outboxDao';
+import * as stopsDao from '@/db/stopsDao';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function SettingsScreen() {
   const { isConnected, setIsConnected } = useNetworkMock();
+  const { refresh } = useStopsContext();
   const colors = useTheme();
   const [resetting, setResetting] = useState(false);
 
@@ -27,6 +31,9 @@ export default function SettingsScreen() {
             try {
               const res = await fetch(`${API_BASE_URL}/reset`, { method: 'POST' });
               if (!res.ok) throw new Error('Server error');
+              await stopsDao.clearAll();
+              await outboxDao.clearAll();
+              await refresh();
               Alert.alert('Done', 'Demo data has been reset.');
             } catch {
               Alert.alert('Error', 'Could not reach the mock server. Make sure it is running.');

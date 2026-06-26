@@ -19,7 +19,7 @@ export function StatusBadge({ status }: { status: StopStatus }) {
   );
 }
 
-export function StopCard({ stop }: { stop: Stop }) {
+export function StopCard({ stop, hasPendingSync }: { stop: Stop; hasPendingSync?: boolean }) {
   const theme = useTheme();
   return (
     <Pressable
@@ -33,7 +33,10 @@ export function StopCard({ stop }: { stop: Stop }) {
         <ThemedText type="smallBold" style={styles.customerName} numberOfLines={1}>
           {stop.customer}
         </ThemedText>
-        <StatusBadge status={stop.status} />
+        <View style={styles.badges}>
+          <StatusBadge status={stop.status} />
+          {hasPendingSync && <View style={styles.pendingDot} />}
+        </View>
       </View>
       <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
         {stop.area} · {stop.address}
@@ -73,5 +76,16 @@ const styles = StyleSheet.create({
   },
   finishBy: {
     marginTop: Spacing.one,
+  },
+  badges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  pendingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
   },
 });

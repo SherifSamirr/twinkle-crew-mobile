@@ -15,4 +15,5 @@ export interface Stop {
   status: StopStatus;
   notes: string | null;
   proof_photo_url: string | null;
+  failed_reason: string | null;
 }
